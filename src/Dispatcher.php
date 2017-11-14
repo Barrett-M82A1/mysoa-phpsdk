@@ -1,36 +1,91 @@
 <?php
 /**
- * 控制客户端 rpc 连接的服务 ip:port 的选举
- * User: mengkang <i@mengkang.net>
- * Date: 2017/10/29 上午1:07
+ * Service Dispatcher
  */
 
-namespace Rpc;
+namespace mysoa;
 
 class Dispatcher{
 
-    public static $services;
+    /**
+     * 服务配置信息
+     * @var array
+     */
+    private static $config;
 
     /**
-     * 更新配置
-     *
-     * @param $list
+     * Dispatcher constructor.
+     * @param $serviceName 服务名称
      */
-    public static function configUpdate($list){
-        var_dump($list);
-        // todo
+    public function __construct($serviceName)
+    {
+        // 是否需要载入配置信息
+        if (!isset(self::$config[$serviceName])) {
+            $config = include __DIR__."/../../config/config.php";
+
+            // 查询服务信息
+            foreach ($config['rpc'] as $key => $item){
+                if($item['name'] === $serviceName){
+                    $service[$key] = $item;
+                }
+            }
+
+            // 设置服务信息
+            self::$config[$serviceName] = $service;
+        }
     }
 
+    /**
+     * 加载配置文件服务信息
+     * @param string $service 服务名称
+     * @return array
+     */
+    public static function loadService($service)
+    {
+        // 检测本地服务信息是否存在
+        if (!isset(self::$config[$service])) {
+            return ['status' => false, 'msg' => 'The local service does not exist', 'data' => []];
+        }
 
-    public static function getService($service){
-        //todo 首先从本地取
-        $sql = "select * from services where `name`=?";
-        $list = \SqlExecute::getAll($sql,[$service]);
-        // todo 选举算法
-        return array_pop($list);
+        return ['status'=>true,'msg'=>'Successful local service','data'=>self::$config[$service]];
     }
 
-    private static function loadBalance($service){
+    /**
+     * 更新本地配置
+     * @param array $service 服务列表
+     */
+    public static function configUpdate($service){
 
+    }
+
+    /**
+     * 权重随机选择算法
+     * @param array $service 服务列表
+     * @return array
+     */
+    public function weight($service)
+    {
+        if (count($service) === 0){
+            return ['status'=>false,'msg'=>'Array does not exist','data'=>''];
+        }
+
+        $weight = 0;
+        $tempdata = [];
+        foreach ($service as $key) {
+            $weight += $key['weight'];
+            for ($i = 0; $i < $key['weight']; $i ++) {
+                $tempdata[] = $key;
+            }
+        }
+        $use = rand(0, $weight - 1);
+        return ['status'=>true,'msg'=>'Successful screening','data'=>$tempdata[$use]];
+    }
+
+    /**
+     * 重置配置参数
+     */
+    public static function reset()
+    {
+        self::$config = [];
     }
 }
