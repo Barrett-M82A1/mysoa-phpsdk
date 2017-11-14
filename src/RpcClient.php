@@ -4,7 +4,7 @@
  */
 namespace mysoa;
 
-use Mysoa\{Response,Dispatcher};
+use mysoa\{Response,Dispatcher};
 
 class RpcClient
 {
