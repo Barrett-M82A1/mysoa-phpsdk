@@ -9,7 +9,6 @@
             "email": "i@yoyoyo.me"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=7.0"
     },
