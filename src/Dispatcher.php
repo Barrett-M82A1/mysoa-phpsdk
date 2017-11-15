@@ -25,7 +25,7 @@ class Dispatcher{
 
             // 查询服务信息
             foreach ($config['rpc'] as $key => $item){
-                if($item['name'] === $serviceName){
+                if($item['name'] == $serviceName){
                     $service[$key] = $item;
                 }
             }

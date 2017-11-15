@@ -4,7 +4,7 @@
  */
 namespace mysoa;
 
-use mysoa\{Response,Dispatcher};
+use mysoa\{Request,Dispatcher};
 
 class RpcClient
 {
@@ -12,7 +12,7 @@ class RpcClient
      * 服务名称
      * @var string
      */
-    private $serviceName;
+    private static $serviceName;
 
     /**
      * 服务信息
@@ -32,7 +32,7 @@ class RpcClient
      */
     public function __construct($serviceName)
     {
-        $this->serviceName = $serviceName;
+        self::$serviceName = $serviceName;
 
         // 设置TCP对象
         self::setTcp();
@@ -43,23 +43,23 @@ class RpcClient
      */
     public static function setTcp()
     {
-        $Dispatcher = new Dispatcher($this->serviceName);
-        $loadService = $Dispatcher->loadService($this->serviceName);
+        $Dispatcher = new Dispatcher(self::$serviceName);
+        $loadService = $Dispatcher->loadService(self::$serviceName);
 
         // 设置服务信息
-        self::$serivceInfo[$this->serviceName] = $loadService['data'];
+        self::$serivceInfo[self::$serviceName] = $loadService['data'];
 
         // 根据权重随机选择服务
-        $service = $Dispatcher->weight(self::$serivceInfo[$this->serviceName]);
+        $service = $Dispatcher->weight(self::$serivceInfo[self::$serviceName]);
 
         // 设置TCP对象
         if ($service['status']){
             $client = new \swoole_client(SWOOLE_SOCK_TCP);
             $client->connect($service['data']['ip'],$service['data']['port'], 0.5);
 
-            self::$service[$this->serviceName] = $client;
+            self::$service[self::$serviceName] = $client;
         }else{
-            self::$service[$this->serviceName] = false;
+            self::$service[self::$serviceName] = false;
         }
     }
 
@@ -79,14 +79,14 @@ class RpcClient
         }
 
         // 设置注册信息
-        $data = json_encode([
+        $data = [
             'app_name'      =>  $config['app_name'],
             'service'       =>  $config['service'],
             'ip'            =>  $config['ip'],
             'method'        =>  'subscribe',
             'port'          =>  $config['port'],
             'notify_port'   =>  $config['notify_port']
-        ]);
+        ];
 
         // 提交注册
         $client->send(self::pack($data));
@@ -119,7 +119,7 @@ class RpcClient
      * @return string
      */
     public static function pack($request){
-        $msg = json_encode($request,true);
+        $msg = json_encode($request);
         return pack('N', strlen($msg)) . $msg;
     }
 
@@ -139,26 +139,27 @@ class RpcClient
      */
     public function __call($method,$param)
     {
-        if (self::$service[$this->serviceName] === false){
+        if (!self::$service[self::$serviceName]){
             return ['status'=>false,'msg'=>'Remote service does not exist','data'=>''];
         }
 
         // 设置对象实例
-        $Client = self::$service[$this->serviceName];
+        $Client = self::$service[self::$serviceName];
 
-        $Request = new Response();
+        $Request = new Request();
 
         // 设置请求信息
         $data = [
-            'service'   =>  $this->serviceName,
+            'service'   =>  self::$serviceName,
             'method'    =>  $method,
             'param'     =>  json_encode($param)
         ];
+        $msg = json_encode($data);
 
         // 服务名称
         $Request->setParam($data);
 
-        $Client->send(self::pack($Request));
+        $Client->send(pack('N', strlen($msg)) . $msg);
 
         $response = $Client->recv();
 

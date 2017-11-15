@@ -11,7 +11,7 @@ class Request
      * 请求数据
      * @var array
      */
-    public $param = [
+    protected $param = [
         // 唯一ID
         'requestId' =>  '',
 
@@ -46,6 +46,13 @@ class Request
     public function setParam($param)
     {
         $this->param = array_merge($this->param,$param);
+    }
+
+    /**
+     * 获取请求参数
+     */
+    public function getParam(){
+        return $this->param;
     }
 
     /**
