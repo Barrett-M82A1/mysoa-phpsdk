@@ -21,7 +21,7 @@ class Dispatcher{
     {
         // 是否需要载入配置信息
         if (!isset(self::$config[$serviceName])) {
-            $config = include __DIR__."/../../config/config.php";
+            $config = include __DIR__."/../../../../config/config.php";
 
             // 查询服务信息
             foreach ($config['rpc'] as $key => $item){
@@ -55,9 +55,9 @@ class Dispatcher{
      * @param array $service 服务列表
      */
     public static function configUpdate($service){
-        $config = include __DIR__."/../../config/config.php";
+        $config = include __DIR__."/../../../../config/config.php";
         $config['rpc'] = $service;
-        $fp= fopen(__DIR__."/../../config/config.php", "w");
+        $fp= fopen(__DIR__."/../../../../config/config.php", "w");
         fwrite($fp,"<?php\nreturn ".var_export($config,true).";");
         fclose($fp);
     }

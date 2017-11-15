@@ -89,19 +89,28 @@ class RpcClient
         ]);
 
         // 提交注册
-        $client->send($this->pack($data));
+        $client->send(self::pack($data));
 
+        // 关闭连接
+        $client->close();
+    }
+
+    /**
+     * 重置服务信息
+     * @param string $data   服务配置信息
+     * @param boole  $setTcp 是否重置TCP对象
+     */
+    public static function rest($data,$setTcp = false){
         // 更新服务信息
-        Dispatcher::configUpdate($this->unpack($client->recv()));
+        Dispatcher::configUpdate(self::unpack($data));
 
         // 重置服务信息
         Dispatcher::reset();
 
-        // 设置TCP对象
-        self::setTcp();
-
-        // 关闭连接
-        $client->close();
+        if ($setTcp){
+            // 设置TCP对象
+            self::setTcp();
+        }
     }
 
     /**
@@ -109,7 +118,7 @@ class RpcClient
      * @param $request
      * @return string
      */
-    public function pack($request){
+    public static function pack($request){
         $msg = json_encode($request,true);
         return pack('N', strlen($msg)) . $msg;
     }
@@ -118,7 +127,7 @@ class RpcClient
      * 接收数据反序列化
      * @param $data
      */
-    public function unpack($data){
+    public static function unpack($data){
         return json_decode(substr($data, 4),true);
     }
 
@@ -149,10 +158,10 @@ class RpcClient
         // 服务名称
         $Request->setParam($data);
 
-        $Client->send($this->pack($Request));
+        $Client->send(self::pack($Request));
 
         $response = $Client->recv();
 
-        return $this->unpack($response);
+        return self::unpack($response);
     }
 }
