@@ -43,7 +43,7 @@ class RpcClient
      */
     public static function setTcp()
     {
-        $Dispatcher = new Dispatcher;
+        $Dispatcher = new Dispatcher($this->serviceName);
         $loadService = $Dispatcher->loadService($this->serviceName);
 
         // 设置服务信息
