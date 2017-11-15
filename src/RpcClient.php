@@ -154,12 +154,11 @@ class RpcClient
             'method'    =>  $method,
             'param'     =>  json_encode($param)
         ];
-        $msg = json_encode($data);
 
-        // 服务名称
+        // 设置请求参数
         $Request->setParam($data);
 
-        $Client->send(pack('N', strlen($msg)) . $msg);
+        $Client->send(self::pack($Request->getParam()));
 
         $response = $Client->recv();
 
